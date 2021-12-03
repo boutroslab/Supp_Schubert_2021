@@ -1,9 +1,10 @@
 ---
-title: "Downstream analysis followig the image analysis to quntify Dvl2_mEos codensates"
+title: "Downstream analysis followig the image analysis to quanttify Dvl2_mEos codensates"
 author:  
-- "Christian Scheeder, Antonia Schubert"
-- "Division Signalling and Functional Genomics"
-- "German Cancer Research Center (DKFZ) Heidelberg"
+- name: "Christian Scheeder"
+- name: "Antionia Schubert"
+  affiliation:
+  - "Division Signalling and Functional Genomics, German Cancer Research Center (DKFZ) Heidelberg"  
 date: \today
 output:
     BiocStyle::pdf_document
@@ -33,10 +34,10 @@ based on a Hoechst staining (DAPI channel) and cell bodies
 based on a DyLight Phalloidin staining 
 (Cy5 channel). 
 After segmentation condensates inside cells were identified based on intensity-based 
-thresholding (FITC channel) and counted. Condensate counts and cell counts (number of segmeted cells) were saved for each image.
+thresholding (FITC channel) and counted. Condensate counts and cell counts (number of segmented cells) were saved for each image.
 An exemplary image analysis can be found with the script
 XXX.R in this repository.
-Four different cell lines are compared: 
+Four different cell lines were compared: 
 - HEK cells with a DVL1-mEOS tag
 - HEK cells with a DVL1-mEOS tag and a EVI k.o. (clone 1)
 - HEK cells with a DVL1-mEOS tag and a EVI k.o. (clone 3)
@@ -47,7 +48,7 @@ For each cell line three replicates were carried out (E01,E02,E03). Per
 replicate multiple 384-well plates were seeded, fixed/stained and imaged. 
 For each replicate representative images were selected. The 
 image-level data (see description above) was further averaged per plate and
-differeces betwee the cell lines were compared using a boxplot and statistical 
+differences between the cell lines were compared using a box plot and statistical 
 testing with the ggbbubr package (non-parametric Wilcoxon rank-sum test). 
 
 
