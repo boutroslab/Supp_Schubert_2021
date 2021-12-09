@@ -36,3 +36,5 @@ vignettes/*.html
 
 # R Environment Variables
 .Renviron
+*.tif
+images_analysis_condesate_quantification.pdf

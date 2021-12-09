@@ -1,5 +1,5 @@
 ---
-title: "Image analysis to quanttify Dvl2_mEos codensates"
+title: "Image analysis to quantify Dvl2_mEos codensates"
 author:  
 - name: "Christian Scheeder"
 - name: "Antionia Schubert"
@@ -49,10 +49,10 @@ The image analysis shown here is exemplary carried out for two cell lines (DVL1-
 # Load the exmaple images 
 ```{r fig.align="center"}
 source_dir_DVL1_mEOS <- 
-  "../data/condesate_quantification/example_images/HC10984t_HC1098_E01_mEos_2_2020.10.21.15.56.44"
+  here("./raw_data/example_images/HC10984t_HC1098_E01_Evi1_1_2020.10.21.23.32.00")
 
 source_dir_DVL1_Evi1 <- 
-  "../data/condesate_quantification/example_images/HC10984t_HC1098_E01_Evi1_1_2020.10.21.23.32.00/"
+  here("./raw_data/example_images/HC10984t_HC1098_E01_mEos_2_2020.10.21.15.56.44")
 
 images_DVL1_mEOS <- EBImage::combine(
   readImage(
