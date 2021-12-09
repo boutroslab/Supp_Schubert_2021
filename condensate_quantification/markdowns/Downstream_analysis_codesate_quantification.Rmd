@@ -57,8 +57,7 @@ testing with the ggbbubr package (non-parametric Wilcoxon rank-sum test).
 For each replicate the results were saved in a separate data frame. 
 
 ```{r}
-results_path <- here(
-  "data/condesate_quantification/results_image_analysis/data_frames")
+results_path <- here("./raw_data/results_image_analysis/data_frames")
 files <- dir(results_path, pattern = "*.rds")
 
 raw_data <- files %>% 
@@ -90,7 +89,7 @@ boxplot <- raw_data %>%
 
 boxplot
 
-ggsave(here("figures/Figure4","boxplot_figure4_raw.pdf"),
+ggsave(here("graphics/Figure4F","boxplot_figure4f_raw.pdf"),
        plot=boxplot,
        width = 6,
        height = 4)
