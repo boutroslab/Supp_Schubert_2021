@@ -1,0 +1,316 @@
+---
+title: "Image analysis to quantify Dvl2_mEos codensates"
+author:  
+- name: "Christian Scheeder"
+- name: "Antionia Schubert"
+  affiliation:
+  - "Division Signalling and Functional Genomics, German Cancer Research Center (DKFZ) Heidelberg"  
+date: \today
+output:
+    BiocStyle::pdf_document
+vignette: >
+    %\VignetteIndexEntry{Vignette Title}
+    %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+    chunk_output_type: console
+---
+
+
+# Load dependencies
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.align="center")
+knitr::opts_chunk$set(dev="png")
+library(EBImage)
+library(tidyverse)
+library(here)
+```
+
+
+# Preamble
+Script to document the image analysis carried out to quantify condensates.
+In brief, The image analysis was carried out as follows:
+In a first step cells were identified by segmentation. Nuclei were identified 
+based on a Hoechst staining (DAPI channel) and cell bodies 
+based on a DyLight Phalloidin staining 
+(Cy5 channel). 
+After segmentation condensates inside cells were identified based on intensity-based 
+thresholding (FITC channel) and counted. Condensate counts and cell counts (number of segmented cells) were saved for each image.
+Four different cell lines were compared: 
+- HEK cells with a DVL1-mEOS tag
+- HEK cells with a DVL1-mEOS tag and a EVI k.o. (clone 1)
+- HEK cells with a DVL1-mEOS tag and a EVI k.o. (clone 3)
+- HEK cells with a DVL1-mEOS tag and a FZD1 k.o. (clone 1)
+- HEK wild-type  
+The image analysis shown here is exemplary carried out for two cell lines (DVL1-mEOS and DVL1-mEOS_EVIk.o._clone1).
+
+
+
+
+# Load the exmaple images 
+```{r fig.align="center"}
+source_dir_DVL1_mEOS <- 
+  here("./raw_data/example_images/HC10984t_HC1098_E01_Evi1_1_2020.10.21.23.32.00")
+
+source_dir_DVL1_Evi1 <- 
+  here("./raw_data/example_images/HC10984t_HC1098_E01_mEos_2_2020.10.21.15.56.44")
+
+images_DVL1_mEOS <- EBImage::combine(
+  readImage(
+    file.path(source_dir_DVL1_mEOS,
+              list.files(
+                source_dir_DVL1_mEOS)[grepl("DAPI",
+                                            list.files(source_dir_DVL1_mEOS))])),
+  readImage(
+    file.path(source_dir_DVL1_mEOS,
+              list.files(
+                source_dir_DVL1_mEOS)[grepl("Cy5",
+                                            list.files(source_dir_DVL1_mEOS))])),
+  readImage(
+    file.path(source_dir_DVL1_mEOS,
+      list.files(
+        source_dir_DVL1_mEOS)[grepl("FITC",
+                                    list.files(source_dir_DVL1_mEOS))]))
+  )
+
+
+display(normalize(images_DVL1_mEOS),
+        method = "raster",
+        all=T)
+
+images_DVL1_Evi1 <- EBImage::combine(
+  readImage(
+    file.path(source_dir_DVL1_Evi1,
+              list.files(
+                source_dir_DVL1_Evi1)[grepl("DAPI",
+                                            list.files(source_dir_DVL1_Evi1))])),
+  readImage(
+    file.path(source_dir_DVL1_Evi1,
+              list.files(
+                source_dir_DVL1_Evi1)[grepl("Cy5",
+                                            list.files(source_dir_DVL1_Evi1))])),
+  readImage(
+    file.path(source_dir_DVL1_Evi1,
+      list.files(
+        source_dir_DVL1_Evi1)[grepl("FITC",
+                                    list.files(source_dir_DVL1_Evi1))]))
+  )
+
+
+display(normalize(images_DVL1_Evi1),
+        method = "raster",
+        all=T)
+```
+
+
+# Perform image analysis 
+```{r fig.align="center"}
+
+# blur the images
+images_DVL1_mEOS_smooth <- images_DVL1_mEOS
+
+images_DVL1_mEOS_smooth[,,1] <- gblur(images_DVL1_mEOS_smooth[,,1],
+                                      radius = 51, 
+                                      sigma = 1)
+
+images_DVL1_mEOS_smooth[,,2] <- gblur(images_DVL1_mEOS_smooth[,,2],
+                                      radius  = 51,
+                                      sigma = 4)
+
+images_DVL1_mEOS_smooth[,,3] <- gblur(images_DVL1_mEOS_smooth[,,3],
+                                      radius  = 51,
+                                      sigma = 4)
+
+
+images_DVL1_Evi1_smooth <- images_DVL1_Evi1
+
+images_DVL1_Evi1_smooth[,,1] <- gblur(images_DVL1_Evi1[,,1],
+                                      radius = 51,
+                                      sigma = 1)
+
+images_DVL1_Evi1_smooth[,,2] <- gblur(images_DVL1_Evi1[,,2],
+                                      radius  = 51,
+                                      sigma = 4)
+
+images_DVL1_Evi1_smooth[,,3] <- gblur(images_DVL1_Evi1[,,3],
+                                      radius  = 51,
+                                      sigma = 4)
+
+
+
+# segment the nuclei 
+segmentNuclei <- function(inputImage){
+  nucleusTresh = thresh(inputImage, 
+                        w = 20, h = 20, 
+                        offset = 0.004)
+
+  nucleusTresh = fillHull(opening(nucleusTresh,
+                                  kern=makeBrush(9, shape="disc")))
+
+  nucleusFill = fillHull(thresh(inputImage, 
+                                w = 30, h = 30, 
+                                offset = 0.001))
+
+  nucleusRegions = propagate(inputImage,
+                             seed=bwlabel(nucleusTresh),
+                             mask=nucleusFill)
+  
+  return(nucleusRegions)
+  
+}
+
+
+nuclei_DVL1_mEOS <- segmentNuclei(inputImage=images_DVL1_mEOS_smooth[,,1])
+nuclei_DVL1_Evi1 <- segmentNuclei(inputImage=images_DVL1_Evi1_smooth[,,1])
+
+display(
+  EBImage::combine(
+    colorLabels(nuclei_DVL1_mEOS),
+    colorLabels(nuclei_DVL1_Evi1)
+  ),
+  all=T,
+  method = "raster"
+  )
+
+
+# Get outlines of cell bodies
+getCellBodies <- function(inputImage,nucleiMask){
+   cytoplasmThresh = thresh(inputImage,
+                            w = 28,
+                            h = 28,
+                            offset =  0.001)
+      
+    cytoplasmOpening = opening(cytoplasmThresh,
+                               kern=makeBrush(9,shape="disc"))
+      
+    cytoplasmOpening2 = opening(inputImage > 0.025)
+      
+      
+    nucleusRegions2 <- nucleiMask
+    nucleusRegions2[nucleiMask != 0] <- 1
+      
+      
+    cytoplasmCombined = cytoplasmOpening | cytoplasmOpening2  | nucleusRegions2  
+      
+      
+    storage.mode(cytoplasmCombined) = "integer"
+      
+      
+    cytoplasmRegions = propagate(x = inputImage,
+                                 seeds = nucleiMask,
+                                 lambda=1e-04,
+                                 mask=cytoplasmCombined)
+      
+    cytoplasmRegions = fillHull(cytoplasmRegions)
+    
+    return(cytoplasmRegions)
+}
+
+cellBodies_DVL1_mEOS <- getCellBodies(inputImage=images_DVL1_mEOS_smooth[,,2],
+                                      nucleiMask = nuclei_DVL1_mEOS)
+
+cellBodies_DVL1_Evi1 <- getCellBodies(inputImage=images_DVL1_Evi1_smooth[,,2],
+                                      nucleiMask = nuclei_DVL1_Evi1)
+
+
+display(
+  EBImage::combine(
+    colorLabels(cellBodies_DVL1_mEOS),
+    colorLabels(cellBodies_DVL1_mEOS)
+  ),
+  all=T,
+  method = "raster"
+  )
+
+
+# display the fluorescence image as normalized and pseudo-colored RGB
+#   with segmentation borders painted 
+ImgColor_DVL1_mEOS = rgbImage(2*normalize(images_DVL1_mEOS_smooth[,,2]),
+                    2*normalize(images_DVL1_mEOS_smooth[,,3]),
+                    2*normalize(images_DVL1_mEOS_smooth[,,1]))
+
+ImgOut_DVL1_mEOS = paintObjects(cellBodies_DVL1_mEOS,
+                      paintObjects(nuclei_DVL1_mEOS,
+                                   ImgColor_DVL1_mEOS,
+                                   col='yellow'),
+                      col='white')
+
+
+ImgColor_DVL1_Evi1 = rgbImage(2*normalize(images_DVL1_Evi1_smooth[,,2]),
+                    2*normalize(images_DVL1_Evi1_smooth[,,3]),
+                    2*normalize(images_DVL1_Evi1_smooth[,,1]))
+
+ImgOut_DVL_Evi1 = paintObjects(cellBodies_DVL1_Evi1,
+                      paintObjects(nuclei_DVL1_Evi1,
+                                   ImgColor_DVL1_Evi1,
+                                   col='yellow'),
+                      col='white')
+
+display(
+  EBImage::combine(
+    ImgOut_DVL1_mEOS,
+    ImgOut_DVL_Evi1
+  ),
+  all=T,
+  method = "raster"
+  )
+
+
+# Detect mEos condensates in images by adaptive thresholding
+getCondensates <- function(inputImage,cellBodyMask){
+  condensates_adaptTresh <- thresh(inputImage, 
+                                   w = 20, h = 20, 
+                                   offset = 0.006)
+  
+  condensates_adaptTresh[cellBodyMask == 0] <- 0
+  
+  condensates_adaptTresh_out <- colorLabels(bwlabel(condensates_adaptTresh))
+  
+  return(condensates_adaptTresh_out)
+}
+
+
+DVL1_mEOS_conTresh <- getCondensates(inputImage = images_DVL1_mEOS_smooth[,,3],
+                                     cellBodyMask = cellBodies_DVL1_mEOS)
+
+DVL1_Evi1_conTresh <- getCondensates(inputImage = images_DVL1_Evi1_smooth[,,3],
+                                     cellBodyMask = cellBodies_DVL1_Evi1)
+
+
+display(
+  EBImage::combine(
+    DVL1_mEOS_conTresh,
+    DVL1_Evi1_conTresh    
+  ),
+  method = 'raster',
+  all=T
+)
+
+
+# the number of condensates corresponds to the number of objects in 
+# the binary image with labels 
+
+print(paste0(
+  "Number of detected condensates in the image with DVL1-mEOS cells: ",
+  length(unique(bwlabel(DVL1_mEOS_conTresh)[bwlabel(DVL1_mEOS_conTresh)!=0])),
+  " in ",
+  length(unique(cellBodies_DVL1_mEOS[cellBodies_DVL1_mEOS!=0])),
+  " cells."
+  )
+)
+
+print(paste0(
+  "Number of detected condensates in the image with DVL1-mEOS Evi1 k.o. cells: ",
+  length(unique(bwlabel(DVL1_Evi1_conTresh)[bwlabel(DVL1_Evi1_conTresh)!=0])),
+  " in ",
+  length(unique(cellBodies_DVL1_Evi1[cellBodies_DVL1_Evi1!=0])),
+  " cells."
+  )
+)
+
+```
+
+# Session info
+```{r}
+sessionInfo()
+```
