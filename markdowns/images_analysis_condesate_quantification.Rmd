@@ -17,7 +17,7 @@ editor_options:
 
 
 # Load dependencies
-```{r setup}
+```{r setup, message=F}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.align="center")
 knitr::opts_chunk$set(dev="png")
