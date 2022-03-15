@@ -17,7 +17,7 @@ editor_options:
 
 
 # Load dependencies
-```{r setup}
+```{r setup, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(here)
@@ -57,7 +57,7 @@ testing with the ggbbubr package (non-parametric Wilcoxon rank-sum test).
 For each replicate the results were saved in a separate data frame. 
 
 ```{r}
-results_path <- here("./raw_data/results_image_analysis/data_frames")
+results_path <- here("./raw_data/raw_data_Fig4F/results_image_analysis/data_frames")
 files <- dir(results_path, pattern = "*.rds")
 
 raw_data <- files %>% 
