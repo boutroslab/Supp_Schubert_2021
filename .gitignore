@@ -42,5 +42,5 @@ vignettes/*.html
 *.Rproj
 
 # Project specific 
-*.pdf
+*.tif
 images_analysis_condesate_quantification.pdf
