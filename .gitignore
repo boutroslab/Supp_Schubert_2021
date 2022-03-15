@@ -36,7 +36,10 @@ vignettes/*.html
 
 # R Environment Variables
 .Renviron
-*.tif
+
 
 # R project files 
 *.Rproj
+
+# Project specific 
+*.pdf
