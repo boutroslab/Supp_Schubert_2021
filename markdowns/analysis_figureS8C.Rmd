@@ -1,0 +1,103 @@
+---
+title: "Downstream analysis followig the image analysis to quanttify Dvl2_mEos codensates (Figure S8C)"
+author:  
+- name: "Christian Scheeder"
+- name: "Antionia Schubert"
+  affiliation:
+  - "Division Signalling and Functional Genomics, German Cancer Research Center (DKFZ) Heidelberg"  
+date: \today
+output:
+    BiocStyle::pdf_document
+vignette: >
+    %\VignetteIndexEntry{Vignette Title}
+    %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+    chunk_output_type: console
+---
+
+
+# Load dependencies
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(cowplot)
+library(ggpubr)
+theme_set(theme_cowplot())
+```
+
+
+# Preamble
+The image analysis was carried out as follows:
+In a first step cells were identified by segmentation. Nuclei were identified 
+based on a Hoechst staining (DAPI channel) and cell bodies 
+based on a DyLight Phalloidin staining 
+(Cy5 channel). 
+After segmentation condensates inside cells were identified based on intensity-based 
+thresholding (FITC channel) and counted. Condensate counts and cell counts (number of segmented cells) were saved for each image.
+An exemplary image analysis can be found with the script
+images_analysis_condesate_quantification.Rmd in this repository.
+Two different cell lines and different conditions were compared.  
+Cell lines:
+- HEK cells with a DVL1-mEOS tag
+- HEK cells with a DVL1-mEOS tag and a EVI k.o. (clone 1)
+
+Conditions:
+- transfection reagent control (RNAiMax)
+- transfection reagent (RNAiMax) + non-targeting siRNA
+- transfection reagent (RNAiMax) + siCTNNB1
+
+
+  
+   
+The time course experiment 4 separate xcperiments (i.e. on different days) 
+were performed. Each experiment was carried out on one 384-well plates. Per 
+condition, 42 wells with 4 fields of view per well were analyzed. 
+
+# Load the data after the image analysis
+Note: The raw data for Figure S8C was saved in one data frame with 
+the war data for figure 4G.
+```{r}
+raw_data <- read_rds(here("raw_data/raw_data_Fig4G","raw_data_Fig4G.rds"))
+```
+
+
+# Prepare boxplot
+```{r}
+
+
+boxplot <- raw_data %>% filter(plate_id == "Plate_IV") %>% 
+  filter(treatment %in% c("RNAiMax","siCTNNB1_PoolDharm","siCtl")) %>% 
+   mutate(norm_punct_count = (punct_count_adapt/cell_count)*100) %>%
+    group_by(barcode,cell_line,plate_id,experiment,treatment) %>%
+    summarise_if(is.numeric,mean) %>% 
+    ungroup() %>% 
+       unite(condition,cell_line,treatment,sep=":") %>% 
+        arrange(condition) %>% 
+        ggplot(aes(x = condition,y=norm_punct_count)) + geom_boxplot(outlier.shape = NA) + 
+       geom_point(aes(color = experiment),
+                  position=position_jitterdodge(
+                    jitter.width=0, dodge.width = 0.3, seed = 1234), 
+             size = 2) +
+    ylab("condensate count per 100 cells") +
+    xlab("condition") + 
+    ylim(0,3.5) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+   
+
+boxplot
+
+
+ggsave(here("./graphics/FigureS8C/","boxplot_figures8c_raw.pdf"),
+            plot=boxplot,
+            width = 6,height = 8)
+
+
+```
+
+
+# Session info
+```{r}
+sessionInfo()
+```

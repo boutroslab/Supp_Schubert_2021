@@ -1,5 +1,5 @@
 ---
-title: "Downstream analysis followig the image analysis to quanttify Dvl2_mEos codensates"
+title: "Downstream analysis followig the image analysis to quanttify Dvl2_mEos codensates (Figure 4F)"
 author:  
 - name: "Christian Scheeder"
 - name: "Antionia Schubert"
@@ -36,7 +36,7 @@ based on a DyLight Phalloidin staining
 After segmentation condensates inside cells were identified based on intensity-based 
 thresholding (FITC channel) and counted. Condensate counts and cell counts (number of segmented cells) were saved for each image.
 An exemplary image analysis can be found with the script
-XXX.R in this repository.
+images_analysis_condesate_quantification.Rmd in this repository.
 Four different cell lines were compared: 
 - HEK cells with a DVL1-mEOS tag
 - HEK cells with a DVL1-mEOS tag and a EVI k.o. (clone 1)
