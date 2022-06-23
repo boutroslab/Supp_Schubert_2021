@@ -1,7 +1,5 @@
 # Supp_Schubert_2021
 
-_The paper this repository relates to is currently under preparation._
-
 This directory contains scripts and files supporting the publication: 
 Schubert et. al.: Super-resolution microscopy localizes endogenous Dvl2 to Wnt signaling-responsive biomolecular condensates, _PNAS_, 2022.
 Specifically, to reproduce Figures 4F, 4G, and S8 and the example image analysis used to quantify condensates.
